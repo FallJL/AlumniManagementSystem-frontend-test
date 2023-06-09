@@ -11,6 +11,12 @@
       @keyup.enter.native="dataFormSubmit()"
       label-width="80px"
     >
+      <el-form-item label="所属审核项的id" prop="auditId">
+        <el-input
+          v-model="dataForm.auditId"
+          placeholder="所属审核项的id"
+        ></el-input>
+      </el-form-item>
       <el-form-item label="姓名" prop="aluName">
         <el-input v-model="dataForm.aluName" placeholder="姓名"></el-input>
       </el-form-item>
@@ -86,20 +92,19 @@
     </el-form>
     <span slot="footer" class="dialog-footer">
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmit()">确定</el-button>
+      <el-button type="primary" @click="auditPass()">审核通过</el-button>
     </span>
   </el-dialog>
 </template>
 
 <script>
-import SingleUpload from "@/components/upload/singleUpload";
 export default {
-  components: { SingleUpload },
   data() {
     return {
       visible: false,
       dataForm: {
         id: 0,
+        auditId: "",
         aluName: "",
         aluId: "",
         gender: "",
@@ -119,96 +124,149 @@ export default {
         jobTitle: "",
         enterpriseProperty: "",
         note: "",
-        aluStatus: "",
+        aluStatus: ""
       },
       dataRule: {
-        aluName: [{ required: true, message: "姓名不能为空", trigger: "blur" }]
-        // aluId: [{ required: true, message: "学号不能为空", trigger: "blur" }],
-        // gender: [{ required: true, message: "性别不能为空", trigger: "blur" }],
-        // idCard: [
-        //   { required: true, message: "身份证号不能为空", trigger: "blur" },
-        // ],
-        // nationality: [
-        //   { required: true, message: "民族不能为空", trigger: "blur" },
-        // ],
-        // politicalStatus: [
-        //   { required: true, message: "政治面貌不能为空", trigger: "blur" },
-        // ],
-        // email: [{ required: true, message: "邮箱不能为空", trigger: "blur" }],
-        // nativePlace: [
-        //   { required: true, message: "籍贯不能为空", trigger: "blur" },
-        // ],
-        // clazz: [{ required: true, message: "班级不能为空", trigger: "blur" }],
-        // admissionTime: [
-        //   { required: true, message: "入学时间不能为空", trigger: "blur" },
-        // ],
-        // graduationTime: [
-        //   { required: true, message: "毕业时间不能为空", trigger: "blur" },
-        // ],
-        // major: [{ required: true, message: "专业不能为空", trigger: "blur" }],
-        // degreeStage: [
-        //   { required: true, message: "阶段不能为空", trigger: "blur" },
-        // ],
-        // phoneNum: [
-        //   { required: true, message: "手机不能为空", trigger: "blur" },
-        // ],
-        // city: [
-        //   { required: true, message: "所在城市不能为空", trigger: "blur" },
-        // ],
-        // workUnit: [
-        //   { required: true, message: "工作单位不能为空", trigger: "blur" },
-        // ],
-        // jobTitle: [
-        //   { required: true, message: "担任职务不能为空", trigger: "blur" },
-        // ],
-        // enterpriseProperty: [
-        //   { required: true, message: "企业性质不能为空", trigger: "blur" },
-        // ],
-        // note: [{ required: true, message: "备注不能为空", trigger: "blur" }],
-        // aluStatus: [
-        //   { required: true, message: "状态不能为空", trigger: "blur" },
-        // ],
+        auditId: [
+          { required: true, message: "所属审核项的id不能为空", trigger: "blur" }
+        ],
+        aluName: [{ required: true, message: "姓名不能为空", trigger: "blur" }],
+        aluId: [{ required: true, message: "学号不能为空", trigger: "blur" }],
+        gender: [{ required: true, message: "性别不能为空", trigger: "blur" }],
+        idCard: [
+          { required: true, message: "身份证号不能为空", trigger: "blur" }
+        ],
+        nationality: [
+          { required: true, message: "民族不能为空", trigger: "blur" }
+        ],
+        politicalStatus: [
+          { required: true, message: "政治面貌不能为空", trigger: "blur" }
+        ],
+        email: [{ required: true, message: "邮箱不能为空", trigger: "blur" }],
+        nativePlace: [
+          { required: true, message: "籍贯不能为空", trigger: "blur" }
+        ],
+        clazz: [{ required: true, message: "班级不能为空", trigger: "blur" }],
+        admissionTime: [
+          { required: true, message: "入学时间不能为空", trigger: "blur" }
+        ],
+        graduationTime: [
+          { required: true, message: "毕业时间不能为空", trigger: "blur" }
+        ],
+        major: [{ required: true, message: "专业不能为空", trigger: "blur" }],
+        degreeStage: [
+          { required: true, message: "阶段不能为空", trigger: "blur" }
+        ],
+        phoneNum: [
+          { required: true, message: "手机不能为空", trigger: "blur" }
+        ],
+        city: [
+          { required: true, message: "所在城市不能为空", trigger: "blur" }
+        ],
+        workUnit: [
+          { required: true, message: "工作单位不能为空", trigger: "blur" }
+        ],
+        jobTitle: [
+          { required: true, message: "担任职务不能为空", trigger: "blur" }
+        ],
+        enterpriseProperty: [
+          { required: true, message: "企业性质不能为空", trigger: "blur" }
+        ],
+        note: [{ required: true, message: "备注不能为空", trigger: "blur" }],
+        aluStatus: [
+          { required: true, message: "状态不能为空", trigger: "blur" }
+        ]
       }
     };
   },
   methods: {
-    init(id) {
-      this.dataForm.id = id || 0;
+    init(auditId) {
+      this.dataForm.auditId = auditId;
+      console.info("auditId:", this.dataForm.auditId);
       this.visible = true;
       this.$nextTick(() => {
         this.$refs["dataForm"].resetFields();
-        if (this.dataForm.id) {
+        if (this.dataForm.auditId) {
           this.$http({
             url: this.$http.adornUrl(
-              `/basic/alumnusbasic/info/${this.dataForm.id}`
+              `/basic/auditdetail/infoByAuditId/${this.dataForm.auditId}`
             ),
             method: "get",
             params: this.$http.adornParams()
           }).then(({ data }) => {
             if (data && data.code === 0) {
-              this.dataForm.aluName = data.alumnusBasic.aluName;
-              this.dataForm.aluId = data.alumnusBasic.aluId;
-              this.dataForm.gender = data.alumnusBasic.gender;
-              this.dataForm.idCard = data.alumnusBasic.idCard;
-              this.dataForm.nationality = data.alumnusBasic.nationality;
-              this.dataForm.politicalStatus = data.alumnusBasic.politicalStatus;
-              this.dataForm.email = data.alumnusBasic.email;
-              this.dataForm.nativePlace = data.alumnusBasic.nativePlace;
-              this.dataForm.clazz = data.alumnusBasic.clazz;
-              this.dataForm.admissionTime = data.alumnusBasic.admissionTime;
-              this.dataForm.graduationTime = data.alumnusBasic.graduationTime;
-              this.dataForm.major = data.alumnusBasic.major;
-              this.dataForm.degreeStage = data.alumnusBasic.degreeStage;
-              this.dataForm.phoneNum = data.alumnusBasic.phoneNum;
-              this.dataForm.city = data.alumnusBasic.city;
-              this.dataForm.workUnit = data.alumnusBasic.workUnit;
-              this.dataForm.jobTitle = data.alumnusBasic.jobTitle;
+              this.dataForm.id = data.auditDetail.id;
+              this.dataForm.auditId = data.auditDetail.auditId;
+              this.dataForm.aluName = data.auditDetail.aluName;
+              this.dataForm.aluId = data.auditDetail.aluId;
+              this.dataForm.gender = data.auditDetail.gender;
+              this.dataForm.idCard = data.auditDetail.idCard;
+              this.dataForm.nationality = data.auditDetail.nationality;
+              this.dataForm.politicalStatus = data.auditDetail.politicalStatus;
+              this.dataForm.email = data.auditDetail.email;
+              this.dataForm.nativePlace = data.auditDetail.nativePlace;
+              this.dataForm.clazz = data.auditDetail.clazz;
+              this.dataForm.admissionTime = data.auditDetail.admissionTime;
+              this.dataForm.graduationTime = data.auditDetail.graduationTime;
+              this.dataForm.major = data.auditDetail.major;
+              this.dataForm.degreeStage = data.auditDetail.degreeStage;
+              this.dataForm.phoneNum = data.auditDetail.phoneNum;
+              this.dataForm.city = data.auditDetail.city;
+              this.dataForm.workUnit = data.auditDetail.workUnit;
+              this.dataForm.jobTitle = data.auditDetail.jobTitle;
               this.dataForm.enterpriseProperty =
-                data.alumnusBasic.enterpriseProperty;
-              this.dataForm.note = data.alumnusBasic.note;
-              this.dataForm.aluStatus = data.alumnusBasic.aluStatus;
+                data.auditDetail.enterpriseProperty;
+              this.dataForm.note = data.auditDetail.note;
+              this.dataForm.aluStatus = data.auditDetail.aluStatus;
             }
           });
+        }
+      });
+    },
+    // 审核通过
+    auditPass() {
+      this.$http({
+        url: this.$http.adornUrl(
+          `/basic/auditdetail/auditPass`
+        ),
+        method: "post",
+        data: this.$http.adornData({
+          id: this.dataForm.id,
+          auditId: this.dataForm.auditId,
+          aluName: this.dataForm.aluName,
+          aluId: this.dataForm.aluId,
+          gender: this.dataForm.gender,
+          idCard: this.dataForm.idCard,
+          nationality: this.dataForm.nationality,
+          politicalStatus: this.dataForm.politicalStatus,
+          email: this.dataForm.email,
+          nativePlace: this.dataForm.nativePlace,
+          clazz: this.dataForm.clazz,
+          admissionTime: this.dataForm.admissionTime,
+          graduationTime: this.dataForm.graduationTime,
+          major: this.dataForm.major,
+          degreeStage: this.dataForm.degreeStage,
+          phoneNum: this.dataForm.phoneNum,
+          city: this.dataForm.city,
+          workUnit: this.dataForm.workUnit,
+          jobTitle: this.dataForm.jobTitle,
+          enterpriseProperty: this.dataForm.enterpriseProperty,
+          note: this.dataForm.note,
+          aluStatus: this.dataForm.aluStatus
+        })
+      }).then(({ data }) => {
+        if (data && data.code === 0) {
+          this.$message({
+            message: "操作成功",
+            type: "success",
+            duration: 1500,
+            onClose: () => {
+              this.visible = false;
+              this.$emit("refreshDataList");
+            }
+          });
+        } else {
+          this.$message.error(data.msg);
         }
       });
     },
@@ -218,11 +276,12 @@ export default {
         if (valid) {
           this.$http({
             url: this.$http.adornUrl(
-              `/basic/alumnusbasic/${!this.dataForm.id ? "save" : "update"}`
+              `/basic/auditdetail/${!this.dataForm.id ? "save" : "update"}`
             ),
             method: "post",
             data: this.$http.adornData({
               id: this.dataForm.id || undefined,
+              auditId: this.dataForm.auditId,
               aluName: this.dataForm.aluName,
               aluId: this.dataForm.aluId,
               gender: this.dataForm.gender,
@@ -242,7 +301,7 @@ export default {
               jobTitle: this.dataForm.jobTitle,
               enterpriseProperty: this.dataForm.enterpriseProperty,
               note: this.dataForm.note,
-              aluStatus: this.dataForm.aluStatus,
+              aluStatus: this.dataForm.aluStatus
             })
           }).then(({ data }) => {
             if (data && data.code === 0) {
@@ -261,7 +320,7 @@ export default {
           });
         }
       });
-    },
+    }
   }
 };
 </script>

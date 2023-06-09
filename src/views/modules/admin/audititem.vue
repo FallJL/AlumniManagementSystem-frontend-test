@@ -15,21 +15,12 @@
       <el-form-item>
         <el-button @click="getDataList()">查询</el-button>
         <el-button
-          v-if="isAuth('basic:alumnusbasic:save')"
-          type="primary"
-          @click="addOrUpdateHandle()"
-          >新增</el-button
-        >
-        <el-button
-          v-if="isAuth('basic:alumnusbasic:delete')"
+          v-if="isAuth('basic:audititem:delete')"
           type="danger"
           @click="deleteHandle()"
           :disabled="dataListSelections.length <= 0"
           >批量删除</el-button
         >
-        <el-upload action="" :data="dataObj">
-          <el-button size="small" type="primary">导入excel文件</el-button>
-        </el-upload>
       </el-form-item>
     </el-form>
     <el-table
@@ -37,7 +28,7 @@
       border
       v-loading="dataListLoading"
       @selection-change="selectionChangeHandle"
-      style="width: 100%"
+      style="width: 100%;"
     >
       <el-table-column
         type="selection"
@@ -51,6 +42,13 @@
         header-align="center"
         align="center"
         label="id"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="alumnusBasicId"
+        header-align="center"
+        align="center"
+        label="校友编号id"
       >
       </el-table-column>
       <el-table-column
@@ -68,143 +66,26 @@
       >
       </el-table-column>
       <el-table-column
-        prop="gender"
-        header-align="center"
-        align="center"
-        label="性别"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="idCard"
-        header-align="center"
-        align="center"
-        label="身份证号"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="nationality"
-        header-align="center"
-        align="center"
-        label="民族"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="politicalStatus"
-        header-align="center"
-        align="center"
-        label="政治面貌"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="email"
-        header-align="center"
-        align="center"
-        label="邮箱"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="nativePlace"
-        header-align="center"
-        align="center"
-        label="籍贯"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="clazz"
-        header-align="center"
-        align="center"
-        label="班级"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="admissionTime"
-        header-align="center"
-        align="center"
-        label="入学时间"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="graduationTime"
-        header-align="center"
-        align="center"
-        label="毕业时间"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="major"
-        header-align="center"
-        align="center"
-        label="专业"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="degreeStage"
-        header-align="center"
-        align="center"
-        label="阶段"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="phoneNum"
-        header-align="center"
-        align="center"
-        label="手机"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="city"
-        header-align="center"
-        align="center"
-        label="所在城市"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="workUnit"
-        header-align="center"
-        align="center"
-        label="工作单位"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="jobTitle"
-        header-align="center"
-        align="center"
-        label="担任职务"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="enterpriseProperty"
-        header-align="center"
-        align="center"
-        label="企业性质"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="workAddress"
-        header-align="center"
-        align="center"
-        label="工作地址"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="note"
-        header-align="center"
-        align="center"
-        label="备注"
-      >
-      </el-table-column>
-      <el-table-column
-        prop="aluStatus"
+        prop="status"
         header-align="center"
         align="center"
         label="状态"
       >
+        <template slot-scope="scope">
+          <span style="margin-left: 10px">{{
+            scope.row.status == 0
+              ? "待审核"
+              : scope.row.status == 1
+              ? "审核通过"
+              : "审核未通过"
+          }}</span>
+        </template>
       </el-table-column>
       <el-table-column
         prop="createTime"
         header-align="center"
         align="center"
-        label="注册时间"
+        label="创建时间"
       >
       </el-table-column>
       <el-table-column
@@ -222,17 +103,14 @@
         label="操作"
       >
         <template slot-scope="scope">
-          <el-button
-            type="text"
-            size="small"
-            @click="addOrUpdateHandle(scope.row.id)"
-            >修改</el-button
+          <el-button type="text" size="small" @click="auditDetail(scope.row.id)"
+            >查看详情</el-button
           >
           <el-button
             type="text"
             size="small"
             @click="deleteHandle(scope.row.id)"
-            >删除</el-button
+            >审核操作</el-button
           >
         </template>
       </el-table-column>
@@ -247,17 +125,17 @@
       layout="total, sizes, prev, pager, next, jumper"
     >
     </el-pagination>
-    <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update
-      v-if="addOrUpdateVisible"
-      ref="addOrUpdate"
+    <!-- 弹窗, 审核详情 -->
+    <audit-detail
+      v-if="auditDetailVisible"
+      ref="auditDetail"
       @refreshDataList="getDataList"
-    ></add-or-update>
+    ></audit-detail>
   </div>
 </template>
 
 <script>
-import AddOrUpdate from "./alumnusbasic-add-or-update";
+import AuditDetail from "./auditdetail.vue";
 export default {
   data() {
     return {
@@ -270,11 +148,11 @@ export default {
       totalPage: 0,
       dataListLoading: false,
       dataListSelections: [],
-      addOrUpdateVisible: false
+      auditDetailVisible: false,
     };
   },
   components: {
-    AddOrUpdate
+    AuditDetail,
   },
   activated() {
     this.getDataList();
@@ -284,7 +162,7 @@ export default {
     getDataList() {
       this.dataListLoading = true;
       this.$http({
-        url: this.$http.adornUrl("/basic/alumnusbasic/list"),
+        url: this.$http.adornUrl("/basic/audititem/list"),
         method: "get",
         params: this.$http.adornParams({
           page: this.pageIndex,
@@ -292,7 +170,6 @@ export default {
           key: this.dataForm.key
         })
       }).then(({ data }) => {
-        console.info(data)
         if (data && data.code === 0) {
           this.dataList = data.page.list;
           this.totalPage = data.page.totalCount;
@@ -318,11 +195,11 @@ export default {
     selectionChangeHandle(val) {
       this.dataListSelections = val;
     },
-    // 新增 / 修改
-    addOrUpdateHandle(id) {
-      this.addOrUpdateVisible = true;
+    // 打开详情页
+    auditDetail(auditId) {
+      this.auditDetailVisible = true;
       this.$nextTick(() => {
-        this.$refs.addOrUpdate.init(id);
+        this.$refs.auditDetail.init(auditId);
       });
     },
     // 删除
@@ -342,7 +219,7 @@ export default {
         }
       ).then(() => {
         this.$http({
-          url: this.$http.adornUrl("/basic/alumnusbasic/delete"),
+          url: this.$http.adornUrl("/basic/audititem/delete"),
           method: "post",
           data: this.$http.adornData(ids, false)
         }).then(({ data }) => {

@@ -257,7 +257,7 @@
 </template>
 
 <script>
-import AddOrUpdate from "./alumnusbasic-add-or-update";
+import AddOrUpdate from "./personalcenter-info-update";
 export default {
   data() {
     return {

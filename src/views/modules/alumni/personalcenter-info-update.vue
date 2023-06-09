@@ -86,7 +86,7 @@
     </el-form>
     <span slot="footer" class="dialog-footer">
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmit()">确定</el-button>
+      <el-button type="primary" @click="dataFormSubmit()">提交审核</el-button>
     </span>
   </el-dialog>
 </template>
@@ -212,17 +212,17 @@ export default {
         }
       });
     },
-    // 表单提交
+    // 表单提交，提交审核申请
     dataFormSubmit() {
       this.$refs["dataForm"].validate(valid => {
         if (valid) {
           this.$http({
             url: this.$http.adornUrl(
-              `/basic/alumnusbasic/${!this.dataForm.id ? "save" : "update"}`
+              `/basic/auditdetail/apply`
             ),
             method: "post",
             data: this.$http.adornData({
-              id: this.dataForm.id || undefined,
+              id: this.dataForm.id,
               aluName: this.dataForm.aluName,
               aluId: this.dataForm.aluId,
               gender: this.dataForm.gender,
