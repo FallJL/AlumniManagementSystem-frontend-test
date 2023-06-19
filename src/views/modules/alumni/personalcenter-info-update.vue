@@ -222,7 +222,7 @@ export default {
             ),
             method: "post",
             data: this.$http.adornData({
-              id: this.dataForm.id,
+              alumnusBasicId: this.dataForm.id,  // 这里发的id实际上是校友基本信息表的id
               aluName: this.dataForm.aluName,
               aluId: this.dataForm.aluId,
               gender: this.dataForm.gender,

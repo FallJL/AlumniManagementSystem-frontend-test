@@ -1,324 +1,321 @@
 <template>
-  <el-dialog
-    :title="!dataForm.id ? '新增' : '修改'"
-    :close-on-click-modal="false"
-    :visible.sync="visible"
-  >
+  <div class="mod-config">
     <el-form
+      :inline="true"
       :model="dataForm"
-      :rules="dataRule"
-      ref="dataForm"
-      @keyup.enter.native="dataFormSubmit()"
-      label-width="80px"
+      @keyup.enter.native="getDataList()"
     >
-      <el-form-item label="所属审核项的id" prop="auditId">
+      <el-form-item>
         <el-input
-          v-model="dataForm.auditId"
-          placeholder="所属审核项的id"
+          v-model="dataForm.key"
+          placeholder="关键字"
+          clearable
         ></el-input>
       </el-form-item>
-      <el-form-item label="姓名" prop="aluName">
-        <el-input v-model="dataForm.aluName" placeholder="姓名"></el-input>
-      </el-form-item>
-      <el-form-item label="学号" prop="aluId">
-        <el-input v-model="dataForm.aluId" placeholder="学号"></el-input>
-      </el-form-item>
-      <el-form-item label="性别" prop="gender">
-        <el-input v-model="dataForm.gender" placeholder="性别"></el-input>
-      </el-form-item>
-      <el-form-item label="身份证号" prop="idCard">
-        <el-input v-model="dataForm.idCard" placeholder="身份证号"></el-input>
-      </el-form-item>
-      <el-form-item label="民族" prop="nationality">
-        <el-input v-model="dataForm.nationality" placeholder="民族"></el-input>
-      </el-form-item>
-      <el-form-item label="政治面貌" prop="politicalStatus">
-        <el-input
-          v-model="dataForm.politicalStatus"
-          placeholder="政治面貌"
-        ></el-input>
-      </el-form-item>
-      <el-form-item label="邮箱" prop="email">
-        <el-input v-model="dataForm.email" placeholder="邮箱"></el-input>
-      </el-form-item>
-      <el-form-item label="籍贯" prop="nativePlace">
-        <el-input v-model="dataForm.nativePlace" placeholder="籍贯"></el-input>
-      </el-form-item>
-      <el-form-item label="班级" prop="clazz">
-        <el-input v-model="dataForm.clazz" placeholder="班级"></el-input>
-      </el-form-item>
-      <el-form-item label="入学时间" prop="admissionTime">
-        <el-input
-          v-model="dataForm.admissionTime"
-          placeholder="入学时间"
-        ></el-input>
-      </el-form-item>
-      <el-form-item label="毕业时间" prop="graduationTime">
-        <el-input
-          v-model="dataForm.graduationTime"
-          placeholder="毕业时间"
-        ></el-input>
-      </el-form-item>
-      <el-form-item label="专业" prop="major">
-        <el-input v-model="dataForm.major" placeholder="专业"></el-input>
-      </el-form-item>
-      <el-form-item label="阶段" prop="degreeStage">
-        <el-input v-model="dataForm.degreeStage" placeholder="阶段"></el-input>
-      </el-form-item>
-      <el-form-item label="手机" prop="phoneNum">
-        <el-input v-model="dataForm.phoneNum" placeholder="手机"></el-input>
-      </el-form-item>
-      <el-form-item label="所在城市" prop="city">
-        <el-input v-model="dataForm.city" placeholder="所在城市"></el-input>
-      </el-form-item>
-      <el-form-item label="工作单位" prop="workUnit">
-        <el-input v-model="dataForm.workUnit" placeholder="工作单位"></el-input>
-      </el-form-item>
-      <el-form-item label="担任职务" prop="jobTitle">
-        <el-input v-model="dataForm.jobTitle" placeholder="担任职务"></el-input>
-      </el-form-item>
-      <el-form-item label="企业性质" prop="enterpriseProperty">
-        <el-input
-          v-model="dataForm.enterpriseProperty"
-          placeholder="企业性质"
-        ></el-input>
-      </el-form-item>
-      <el-form-item label="备注" prop="note">
-        <el-input v-model="dataForm.note" placeholder="备注"></el-input>
-      </el-form-item>
-      <el-form-item label="状态" prop="aluStatus">
-        <el-input v-model="dataForm.aluStatus" placeholder="状态"></el-input>
+      <el-form-item>
+        <el-select v-model="filterStatus" clearable placeholder="筛选审核状态">
+          <el-option
+            v-for="item in filterableStatus"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          >
+          </el-option>
+        </el-select>
+        <el-button @click="getDataList()">查询</el-button>
+        <el-button
+          v-if="isAuth('basic:auditdetail:pass')"
+          type="success"
+          @click="auditPass()"
+          :disabled="dataListSelections.length <= 0"
+          >批量通过</el-button
+        >
+        <el-button
+          v-if="isAuth('basic:auditdetail:notpass')"
+          type="danger"
+          @click="auditNotPass()"
+          :disabled="dataListSelections.length <= 0"
+          >批量不通过</el-button
+        >
       </el-form-item>
     </el-form>
-    <span slot="footer" class="dialog-footer">
-      <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="auditPass()">审核通过</el-button>
-    </span>
-  </el-dialog>
+    <el-table
+      :data="dataList"
+      border
+      v-loading="dataListLoading"
+      @selection-change="selectionChangeHandle"
+      style="width: 100%"
+    >
+      <el-table-column
+        type="selection"
+        header-align="center"
+        align="center"
+        width="50"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="id"
+        header-align="center"
+        align="center"
+        label="id"
+      >
+      </el-table-column>
+      <!-- <el-table-column
+        prop="alumnusBasicId"
+        header-align="center"
+        align="center"
+        label="校友基本信息表的id"
+      >
+      </el-table-column> -->
+      <el-table-column
+        prop="aluName"
+        header-align="center"
+        align="center"
+        label="姓名"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="aluId"
+        header-align="center"
+        align="center"
+        label="学号"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="status"
+        header-align="center"
+        align="center"
+        label="审核状态"
+      >
+        <template slot-scope="scope">
+          <div class="tag-group">
+            <el-tag size="medium" :type="showStatus[scope.row.status]">{{
+              scope.row.status == 0
+                ? "待审核"
+                : scope.row.status == 1
+                ? "通过"
+                : scope.row.status == 2
+                ? "未通过"
+                : "已撤销"
+            }}</el-tag>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="createTime"
+        header-align="center"
+        align="center"
+        label="创建时间"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="updateTime"
+        header-align="center"
+        align="center"
+        label="更新时间"
+      >
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        header-align="center"
+        align="center"
+        width="150"
+        label="操作"
+      >
+        <template slot-scope="scope">
+          <el-button type="text" size="small" @click="checkDetail(scope.row.id)"
+            >详情</el-button
+          >
+          <el-button type="text" size="small" @click="auditPass(scope.row.id)"
+            >通过</el-button
+          >
+          <el-button
+            type="text"
+            size="small"
+            @click="auditNotPass(scope.row.id)"
+            >不通过</el-button
+          >
+        </template>
+      </el-table-column>
+    </el-table>
+    <el-pagination
+      @size-change="sizeChangeHandle"
+      @current-change="currentChangeHandle"
+      :current-page="pageIndex"
+      :page-sizes="[10, 20, 50, 100]"
+      :page-size="pageSize"
+      :total="totalPage"
+      layout="total, sizes, prev, pager, next, jumper"
+    >
+    </el-pagination>
+    <!-- 弹窗, 详情 -->
+    <check-detail
+      v-if="checkDetailVisible"
+      ref="checkDetail"
+      @refreshDataList="getDataList"
+    ></check-detail>
+  </div>
 </template>
 
 <script>
+import CheckDetail from "./auditdetail-check-detail";
 export default {
   data() {
     return {
-      visible: false,
       dataForm: {
-        id: 0,
-        auditId: "",
-        aluName: "",
-        aluId: "",
-        gender: "",
-        idCard: "",
-        nationality: "",
-        politicalStatus: "",
-        email: "",
-        nativePlace: "",
-        clazz: "",
-        admissionTime: "",
-        graduationTime: "",
-        major: "",
-        degreeStage: "",
-        phoneNum: "",
-        city: "",
-        workUnit: "",
-        jobTitle: "",
-        enterpriseProperty: "",
-        note: "",
-        aluStatus: ""
+        key: ""
       },
-      dataRule: {
-        auditId: [
-          { required: true, message: "所属审核项的id不能为空", trigger: "blur" }
-        ],
-        aluName: [{ required: true, message: "姓名不能为空", trigger: "blur" }],
-        aluId: [{ required: true, message: "学号不能为空", trigger: "blur" }],
-        gender: [{ required: true, message: "性别不能为空", trigger: "blur" }],
-        idCard: [
-          { required: true, message: "身份证号不能为空", trigger: "blur" }
-        ],
-        nationality: [
-          { required: true, message: "民族不能为空", trigger: "blur" }
-        ],
-        politicalStatus: [
-          { required: true, message: "政治面貌不能为空", trigger: "blur" }
-        ],
-        email: [{ required: true, message: "邮箱不能为空", trigger: "blur" }],
-        nativePlace: [
-          { required: true, message: "籍贯不能为空", trigger: "blur" }
-        ],
-        clazz: [{ required: true, message: "班级不能为空", trigger: "blur" }],
-        admissionTime: [
-          { required: true, message: "入学时间不能为空", trigger: "blur" }
-        ],
-        graduationTime: [
-          { required: true, message: "毕业时间不能为空", trigger: "blur" }
-        ],
-        major: [{ required: true, message: "专业不能为空", trigger: "blur" }],
-        degreeStage: [
-          { required: true, message: "阶段不能为空", trigger: "blur" }
-        ],
-        phoneNum: [
-          { required: true, message: "手机不能为空", trigger: "blur" }
-        ],
-        city: [
-          { required: true, message: "所在城市不能为空", trigger: "blur" }
-        ],
-        workUnit: [
-          { required: true, message: "工作单位不能为空", trigger: "blur" }
-        ],
-        jobTitle: [
-          { required: true, message: "担任职务不能为空", trigger: "blur" }
-        ],
-        enterpriseProperty: [
-          { required: true, message: "企业性质不能为空", trigger: "blur" }
-        ],
-        note: [{ required: true, message: "备注不能为空", trigger: "blur" }],
-        aluStatus: [
-          { required: true, message: "状态不能为空", trigger: "blur" }
-        ]
-      }
+      dataList: [],
+      pageIndex: 1,
+      pageSize: 10,
+      totalPage: 0,
+      dataListLoading: false,
+      dataListSelections: [],
+      checkDetailVisible: false,
+      showStatus: ["", "success", "danger", "warning"],
+      filterStatus: "",
+      filterableStatus: [
+        {
+          value: "0",
+          label: "待审核"
+        },
+        {
+          value: "1",
+          label: "通过"
+        },
+        {
+          value: "2",
+          label: "未通过"
+        },
+        {
+          value: "3",
+          label: "已撤销"
+        }
+      ]
     };
   },
+  components: {
+    CheckDetail
+  },
+  activated() {
+    this.getDataList();
+  },
   methods: {
-    init(auditId) {
-      this.dataForm.auditId = auditId;
-      console.info("auditId:", this.dataForm.auditId);
-      this.visible = true;
-      this.$nextTick(() => {
-        this.$refs["dataForm"].resetFields();
-        if (this.dataForm.auditId) {
-          this.$http({
-            url: this.$http.adornUrl(
-              `/basic/auditdetail/infoByAuditId/${this.dataForm.auditId}`
-            ),
-            method: "get",
-            params: this.$http.adornParams()
-          }).then(({ data }) => {
-            if (data && data.code === 0) {
-              this.dataForm.id = data.auditDetail.id;
-              this.dataForm.auditId = data.auditDetail.auditId;
-              this.dataForm.aluName = data.auditDetail.aluName;
-              this.dataForm.aluId = data.auditDetail.aluId;
-              this.dataForm.gender = data.auditDetail.gender;
-              this.dataForm.idCard = data.auditDetail.idCard;
-              this.dataForm.nationality = data.auditDetail.nationality;
-              this.dataForm.politicalStatus = data.auditDetail.politicalStatus;
-              this.dataForm.email = data.auditDetail.email;
-              this.dataForm.nativePlace = data.auditDetail.nativePlace;
-              this.dataForm.clazz = data.auditDetail.clazz;
-              this.dataForm.admissionTime = data.auditDetail.admissionTime;
-              this.dataForm.graduationTime = data.auditDetail.graduationTime;
-              this.dataForm.major = data.auditDetail.major;
-              this.dataForm.degreeStage = data.auditDetail.degreeStage;
-              this.dataForm.phoneNum = data.auditDetail.phoneNum;
-              this.dataForm.city = data.auditDetail.city;
-              this.dataForm.workUnit = data.auditDetail.workUnit;
-              this.dataForm.jobTitle = data.auditDetail.jobTitle;
-              this.dataForm.enterpriseProperty =
-                data.auditDetail.enterpriseProperty;
-              this.dataForm.note = data.auditDetail.note;
-              this.dataForm.aluStatus = data.auditDetail.aluStatus;
-            }
-          });
-        }
-      });
-    },
-    // 审核通过
-    auditPass() {
+    // 获取数据列表
+    getDataList() {
+      this.dataListLoading = true;
       this.$http({
-        url: this.$http.adornUrl(
-          `/basic/auditdetail/auditPass`
-        ),
-        method: "post",
-        data: this.$http.adornData({
-          id: this.dataForm.id,
-          auditId: this.dataForm.auditId,
-          aluName: this.dataForm.aluName,
-          aluId: this.dataForm.aluId,
-          gender: this.dataForm.gender,
-          idCard: this.dataForm.idCard,
-          nationality: this.dataForm.nationality,
-          politicalStatus: this.dataForm.politicalStatus,
-          email: this.dataForm.email,
-          nativePlace: this.dataForm.nativePlace,
-          clazz: this.dataForm.clazz,
-          admissionTime: this.dataForm.admissionTime,
-          graduationTime: this.dataForm.graduationTime,
-          major: this.dataForm.major,
-          degreeStage: this.dataForm.degreeStage,
-          phoneNum: this.dataForm.phoneNum,
-          city: this.dataForm.city,
-          workUnit: this.dataForm.workUnit,
-          jobTitle: this.dataForm.jobTitle,
-          enterpriseProperty: this.dataForm.enterpriseProperty,
-          note: this.dataForm.note,
-          aluStatus: this.dataForm.aluStatus
+        url: this.$http.adornUrl("/basic/auditdetail/list"),
+        method: "get",
+        params: this.$http.adornParams({
+          page: this.pageIndex,
+          limit: this.pageSize,
+          key: this.dataForm.key,
+          status: this.filterStatus
         })
       }).then(({ data }) => {
         if (data && data.code === 0) {
-          this.$message({
-            message: "操作成功",
-            type: "success",
-            duration: 1500,
-            onClose: () => {
-              this.visible = false;
-              this.$emit("refreshDataList");
-            }
-          });
+          this.dataList = data.page.list;
+          this.totalPage = data.page.totalCount;
         } else {
-          this.$message.error(data.msg);
+          this.dataList = [];
+          this.totalPage = 0;
         }
+        this.dataListLoading = false;
       });
     },
-    // 表单提交
-    dataFormSubmit() {
-      this.$refs["dataForm"].validate(valid => {
-        if (valid) {
-          this.$http({
-            url: this.$http.adornUrl(
-              `/basic/auditdetail/${!this.dataForm.id ? "save" : "update"}`
-            ),
-            method: "post",
-            data: this.$http.adornData({
-              id: this.dataForm.id || undefined,
-              auditId: this.dataForm.auditId,
-              aluName: this.dataForm.aluName,
-              aluId: this.dataForm.aluId,
-              gender: this.dataForm.gender,
-              idCard: this.dataForm.idCard,
-              nationality: this.dataForm.nationality,
-              politicalStatus: this.dataForm.politicalStatus,
-              email: this.dataForm.email,
-              nativePlace: this.dataForm.nativePlace,
-              clazz: this.dataForm.clazz,
-              admissionTime: this.dataForm.admissionTime,
-              graduationTime: this.dataForm.graduationTime,
-              major: this.dataForm.major,
-              degreeStage: this.dataForm.degreeStage,
-              phoneNum: this.dataForm.phoneNum,
-              city: this.dataForm.city,
-              workUnit: this.dataForm.workUnit,
-              jobTitle: this.dataForm.jobTitle,
-              enterpriseProperty: this.dataForm.enterpriseProperty,
-              note: this.dataForm.note,
-              aluStatus: this.dataForm.aluStatus
-            })
-          }).then(({ data }) => {
-            if (data && data.code === 0) {
-              this.$message({
-                message: "操作成功",
-                type: "success",
-                duration: 1500,
-                onClose: () => {
-                  this.visible = false;
-                  this.$emit("refreshDataList");
-                }
-              });
-            } else {
-              this.$message.error(data.msg);
-            }
+    // 每页数
+    sizeChangeHandle(val) {
+      this.pageSize = val;
+      this.pageIndex = 1;
+      this.getDataList();
+    },
+    // 当前页
+    currentChangeHandle(val) {
+      this.pageIndex = val;
+      this.getDataList();
+    },
+    // 多选
+    selectionChangeHandle(val) {
+      this.dataListSelections = val;
+    },
+    // 详情
+    checkDetail(id) {
+      this.checkDetailVisible = true;
+      this.$nextTick(() => {
+        this.$refs.checkDetail.init(id);
+      });
+    },
+    // 审核通过
+    auditPass(id) {
+      var ids = id
+        ? [id]
+        : this.dataListSelections.map(item => {
+            return item.id;
           });
+      this.$confirm(
+        `确定对[id=${ids.join(",")}]进行[${id ? "通过" : "批量通过"}]操作?`,
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "success"
         }
+      ).then(() => {
+        this.$http({
+          url: this.$http.adornUrl("/basic/auditdetail/audit-pass"),
+          method: "post",
+          data: this.$http.adornData(ids, false)
+        }).then(({ data }) => {
+          if (data && data.code === 0) {
+            this.$message({
+              message: "操作成功",
+              type: "success",
+              duration: 1500,
+              onClose: () => {
+                this.getDataList();
+              }
+            });
+          } else {
+            this.$message.error(data.msg);
+          }
+        });
+      });
+    },
+    // 审核不通过
+    auditNotPass(id) {
+      var ids = id
+        ? [id]
+        : this.dataListSelections.map(item => {
+            return item.id;
+          });
+      this.$confirm(
+        `确定对[id=${ids.join(",")}]进行[${id ? "不通过" : "批量不通过"}]操作?`,
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }
+      ).then(() => {
+        this.$http({
+          url: this.$http.adornUrl("/basic/auditdetail/audit-not-pass"),
+          method: "post",
+          data: this.$http.adornData(ids, false)
+        }).then(({ data }) => {
+          if (data && data.code === 0) {
+            this.$message({
+              message: "操作成功",
+              type: "success",
+              duration: 1500,
+              onClose: () => {
+                this.getDataList();
+              }
+            });
+          } else {
+            this.$message.error(data.msg);
+          }
+        });
       });
     }
   }
