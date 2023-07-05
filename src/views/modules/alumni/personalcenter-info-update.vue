@@ -122,7 +122,7 @@ export default {
         aluStatus: "",
       },
       dataRule: {
-        aluName: [{ required: true, message: "姓名不能为空", trigger: "blur" }]
+        // aluName: [{ required: true, message: "姓名不能为空", trigger: "blur" }]
         // aluId: [{ required: true, message: "学号不能为空", trigger: "blur" }],
         // gender: [{ required: true, message: "性别不能为空", trigger: "blur" }],
         // idCard: [
@@ -180,33 +180,33 @@ export default {
         if (this.dataForm.id) {
           this.$http({
             url: this.$http.adornUrl(
-              `/basic/alumnusbasic/info/${this.dataForm.id}`
+              `/basic/alumnusbasic/info`
             ),
             method: "get",
             params: this.$http.adornParams()
           }).then(({ data }) => {
             if (data && data.code === 0) {
-              this.dataForm.aluName = data.alumnusBasic.aluName;
-              this.dataForm.aluId = data.alumnusBasic.aluId;
-              this.dataForm.gender = data.alumnusBasic.gender;
-              this.dataForm.idCard = data.alumnusBasic.idCard;
-              this.dataForm.nationality = data.alumnusBasic.nationality;
-              this.dataForm.politicalStatus = data.alumnusBasic.politicalStatus;
-              this.dataForm.email = data.alumnusBasic.email;
-              this.dataForm.nativePlace = data.alumnusBasic.nativePlace;
-              this.dataForm.clazz = data.alumnusBasic.clazz;
-              this.dataForm.admissionTime = data.alumnusBasic.admissionTime;
-              this.dataForm.graduationTime = data.alumnusBasic.graduationTime;
-              this.dataForm.major = data.alumnusBasic.major;
-              this.dataForm.degreeStage = data.alumnusBasic.degreeStage;
-              this.dataForm.phoneNum = data.alumnusBasic.phoneNum;
-              this.dataForm.city = data.alumnusBasic.city;
-              this.dataForm.workUnit = data.alumnusBasic.workUnit;
-              this.dataForm.jobTitle = data.alumnusBasic.jobTitle;
+              this.dataForm.aluName = data.user.aluName;
+              this.dataForm.aluId = data.user.aluId;
+              this.dataForm.gender = data.user.gender;
+              this.dataForm.idCard = data.user.idCard;
+              this.dataForm.nationality = data.user.nationality;
+              this.dataForm.politicalStatus = data.user.politicalStatus;
+              this.dataForm.email = data.user.email;
+              this.dataForm.nativePlace = data.user.nativePlace;
+              this.dataForm.clazz = data.user.clazz;
+              this.dataForm.admissionTime = data.user.admissionTime;
+              this.dataForm.graduationTime = data.user.graduationTime;
+              this.dataForm.major = data.user.major;
+              this.dataForm.degreeStage = data.user.degreeStage;
+              this.dataForm.phoneNum = data.user.phoneNum;
+              this.dataForm.city = data.user.city;
+              this.dataForm.workUnit = data.user.workUnit;
+              this.dataForm.jobTitle = data.user.jobTitle;
               this.dataForm.enterpriseProperty =
-                data.alumnusBasic.enterpriseProperty;
-              this.dataForm.note = data.alumnusBasic.note;
-              this.dataForm.aluStatus = data.alumnusBasic.aluStatus;
+                data.user.enterpriseProperty;
+              this.dataForm.note = data.user.note;
+              this.dataForm.aluStatus = data.user.aluStatus;
             }
           });
         }
@@ -222,9 +222,9 @@ export default {
             ),
             method: "post",
             data: this.$http.adornData({
-              alumnusBasicId: this.dataForm.id,  // 这里发的id实际上是校友基本信息表的id
+              // alumnusBasicId: this.dataForm.id,  // 这里发的id实际上是校友基本信息表的id
               aluName: this.dataForm.aluName,
-              aluId: this.dataForm.aluId,
+              // aluId: this.dataForm.aluId,
               gender: this.dataForm.gender,
               idCard: this.dataForm.idCard,
               nationality: this.dataForm.nationality,

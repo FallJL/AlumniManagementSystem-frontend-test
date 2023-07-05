@@ -1,51 +1,14 @@
 <template>
   <div class="mod-config">
-    <el-form
-      :inline="true"
-      :model="dataForm"
-      @keyup.enter.native="getDataList()"
-    >
-      <el-form-item>
-        <el-input
-          v-model="dataForm.key"
-          placeholder="参数名"
-          clearable
-        ></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="getDataList()">查询</el-button>
-        <el-button
-          v-if="isAuth('basic:alumnusbasic:save')"
-          type="primary"
-          @click="addOrUpdateHandle()"
-          >新增</el-button
-        >
-        <el-button
-          v-if="isAuth('basic:alumnusbasic:delete')"
-          type="danger"
-          @click="deleteHandle()"
-          :disabled="dataListSelections.length <= 0"
-          >批量删除</el-button
-        >
-        <el-upload action="" :data="dataObj">
-          <el-button size="small" type="primary">导入excel文件</el-button>
-        </el-upload>
-      </el-form-item>
-    </el-form>
+    <el-card class="box-card">
+      信息
+    </el-card>
     <el-table
       :data="dataList"
       border
       v-loading="dataListLoading"
-      @selection-change="selectionChangeHandle"
       style="width: 100%"
     >
-      <el-table-column
-        type="selection"
-        header-align="center"
-        align="center"
-        width="50"
-      >
-      </el-table-column>
       <el-table-column
         prop="id"
         header-align="center"
@@ -228,121 +191,210 @@
             @click="addOrUpdateHandle(scope.row.id)"
             >修改</el-button
           >
+        </template>
+      </el-table-column>
+    </el-table>
+    <br />
+    <br>
+    <el-card class="box-card">
+      修改信息的审核记录
+    </el-card>
+    <el-table
+      :data="auditList"
+      border
+      v-loading="auditListLoading"
+      style="width: 100%"
+    >
+      <!-- <el-table-column
+        type="selection"
+        header-align="center"
+        align="center"
+        width="50"
+      >
+      </el-table-column> -->
+      <el-table-column
+        prop="id"
+        header-align="center"
+        align="center"
+        label="id"
+      >
+      </el-table-column>
+      <!-- <el-table-column
+        prop="alumnusBasicId"
+        header-align="center"
+        align="center"
+        label="校友基本信息表的id"
+      >
+      </el-table-column> -->
+      <el-table-column
+        prop="aluName"
+        header-align="center"
+        align="center"
+        label="姓名"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="aluId"
+        header-align="center"
+        align="center"
+        label="学号"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="status"
+        header-align="center"
+        align="center"
+        label="审核状态"
+      >
+        <template slot-scope="scope">
+          <div class="tag-group">
+            <el-tag size="medium" :type="showStatus[scope.row.status]">{{
+              scope.row.status == 0
+                ? "待审核"
+                : scope.row.status == 1
+                ? "通过"
+                : scope.row.status == 2
+                ? "未通过"
+                : "已撤销"
+            }}</el-tag>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="createTime"
+        header-align="center"
+        align="center"
+        label="创建时间"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="updateTime"
+        header-align="center"
+        align="center"
+        label="更新时间"
+      >
+      </el-table-column>
+      <el-table-column
+        fixed="right"
+        header-align="center"
+        align="center"
+        width="150"
+        label="操作"
+      >
+        <template slot-scope="scope">
+          <el-button type="text" size="small" @click="checkDetail(scope.row.id)"
+            >详情</el-button
+          >
           <el-button
             type="text"
             size="small"
-            @click="deleteHandle(scope.row.id)"
-            >删除</el-button
+            @click="auditRepeal(scope.row.id)"
+            v-if="scope.row.status == 0"
+            >撤销</el-button
           >
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination
-      @size-change="sizeChangeHandle"
-      @current-change="currentChangeHandle"
-      :current-page="pageIndex"
-      :page-sizes="[10, 20, 50, 100]"
-      :page-size="pageSize"
-      :total="totalPage"
-      layout="total, sizes, prev, pager, next, jumper"
-    >
-    </el-pagination>
-    <!-- 弹窗, 新增 / 修改 -->
+    <!-- 弹窗, 修改信息 -->
     <add-or-update
       v-if="addOrUpdateVisible"
       ref="addOrUpdate"
-      @refreshDataList="getDataList"
+      @refreshDataList="getAuditList"
     ></add-or-update>
+    <!-- 弹窗, 审核项详情 -->
+    <check-detail
+      v-if="checkDetailVisible"
+      ref="checkDetail"
+      @refreshAuditList="getAuditList"
+    ></check-detail>
   </div>
 </template>
 
 <script>
 import AddOrUpdate from "./personalcenter-info-update";
+import CheckDetail from "./alumni-auditdetail-check-detail";
 export default {
   data() {
     return {
-      dataForm: {
-        key: ""
-      },
       dataList: [],
-      pageIndex: 1,
-      pageSize: 10,
-      totalPage: 0,
       dataListLoading: false,
-      dataListSelections: [],
-      addOrUpdateVisible: false
+      addOrUpdateVisible: false,
+      auditList: [],
+      auditListLoading: false,
+      checkDetailVisible: false,
+      showStatus: ["", "success", "danger", "warning"]
     };
   },
   components: {
-    AddOrUpdate
+    AddOrUpdate,
+    CheckDetail
   },
   activated() {
     this.getDataList();
+    this.getAuditList();
   },
   methods: {
-    // 获取数据列表
+    // 获取校友数据
     getDataList() {
       this.dataListLoading = true;
       this.$http({
-        url: this.$http.adornUrl("/basic/alumnusbasic/list"),
+        url: this.$http.adornUrl("/basic/alumnusbasic/info"),
         method: "get",
-        params: this.$http.adornParams({
-          page: this.pageIndex,
-          limit: this.pageSize,
-          key: this.dataForm.key
-        })
+        params: this.$http.adornParams()
       }).then(({ data }) => {
-        console.info(data)
+        console.info(data);
         if (data && data.code === 0) {
-          this.dataList = data.page.list;
-          this.totalPage = data.page.totalCount;
+          this.dataList = [data.user];
         } else {
-          this.dataList = [];
-          this.totalPage = 0;
+          this.$message.error(data.msg);
         }
         this.dataListLoading = false;
       });
     },
-    // 每页数
-    sizeChangeHandle(val) {
-      this.pageSize = val;
-      this.pageIndex = 1;
-      this.getDataList();
-    },
-    // 当前页
-    currentChangeHandle(val) {
-      this.pageIndex = val;
-      this.getDataList();
-    },
-    // 多选
-    selectionChangeHandle(val) {
-      this.dataListSelections = val;
-    },
-    // 新增 / 修改
+    // 修改信息
     addOrUpdateHandle(id) {
       this.addOrUpdateVisible = true;
       this.$nextTick(() => {
         this.$refs.addOrUpdate.init(id);
       });
     },
-    // 删除
-    deleteHandle(id) {
-      var ids = id
-        ? [id]
-        : this.dataListSelections.map(item => {
-            return item.id;
-          });
+    // 获取审核列表
+    getAuditList() {
+      this.auditListLoading = true;
+      this.$http({
+        url: this.$http.adornUrl("/basic/auditdetail/info"),
+        method: "get",
+        params: this.$http.adornParams()
+      }).then(({ data }) => {
+        if (data && data.code === 0) {
+          this.auditList = data.auditList;
+        } else {
+          this.$message.error(data.msg);
+        }
+        this.auditListLoading = false;
+      });
+    },
+    // 详情
+    checkDetail(id) {
+      this.checkDetailVisible = true;
+      this.$nextTick(() => {
+        this.$refs.checkDetail.init(id);
+      });
+    },
+    // 审核撤销
+    auditRepeal(id) {
+      var ids = [id];
       this.$confirm(
-        `确定对[id=${ids.join(",")}]进行[${id ? "删除" : "批量删除"}]操作?`,
+        `确定对[id=${ids.join(",")}]进行[${id ? "撤销" : "批量撤销"}]操作?`,
         "提示",
         {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
-          type: "warning"
+          type: "success"
         }
       ).then(() => {
         this.$http({
-          url: this.$http.adornUrl("/basic/alumnusbasic/delete"),
+          url: this.$http.adornUrl("/basic/auditdetail/audit-repeal"),
           method: "post",
           data: this.$http.adornData(ids, false)
         }).then(({ data }) => {
@@ -352,7 +404,7 @@ export default {
               type: "success",
               duration: 1500,
               onClose: () => {
-                this.getDataList();
+                this.getAuditList();
               }
             });
           } else {

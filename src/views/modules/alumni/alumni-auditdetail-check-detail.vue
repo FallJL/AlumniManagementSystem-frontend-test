@@ -242,14 +242,11 @@
     </div>
     <span slot="footer" class="dialog-footer">
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="success" @click="auditPass()" v-if="dataForm.status == 0"
-        >通过</el-button
-      >
       <el-button
-        type="danger"
-        @click="auditNotPass()"
+        type="warning"
+        @click="auditRepeal()"
         v-if="dataForm.status == 0"
-        >不通过</el-button
+        >撤销</el-button
       >
     </span>
   </el-dialog>
@@ -320,11 +317,11 @@ export default {
         this.$refs["dataForm"].resetFields();
         if (this.dataForm.id) {
           this.$http({
-            url: this.$http.adornUrl(`/sys/feign/info-and-basic`),
+            url: this.$http.adornUrl(
+              `/basic/auditdetail/info-and-basic/${this.dataForm.id}`
+            ),
             method: "get",
-            params: this.$http.adornParams({
-              id: this.dataForm.id
-            })
+            params: this.$http.adornParams()
           }).then(({ data }) => {
             if (data && data.code === 0) {
               // 修改后的数据
@@ -381,10 +378,10 @@ export default {
         }
       });
     },
-    // 审核通过
-    auditPass() {
+    // 审核撤销
+    auditRepeal() {
       this.$http({
-        url: this.$http.adornUrl(`/basic/auditdetail/audit-pass`),
+        url: this.$http.adornUrl(`/basic/auditdetail/audit-repeal`),
         method: "post",
         data: this.$http.adornData([this.dataForm.id], false)
       }).then(({ data }) => {
@@ -395,29 +392,7 @@ export default {
             duration: 1500,
             onClose: () => {
               this.visible = false;
-              this.$emit("refreshDataList");
-            }
-          });
-        } else {
-          this.$message.error(data.msg);
-        }
-      });
-    },
-    // 审核不通过
-    auditNotPass() {
-      this.$http({
-        url: this.$http.adornUrl(`/basic/auditdetail/audit-not-pass`),
-        method: "post",
-        data: this.$http.adornData([this.dataForm.id], false)
-      }).then(({ data }) => {
-        if (data && data.code === 0) {
-          this.$message({
-            message: "操作成功",
-            type: "success",
-            duration: 1500,
-            onClose: () => {
-              this.visible = false;
-              this.$emit("refreshDataList");
+              this.$emit("refreshAuditList");
             }
           });
         } else {

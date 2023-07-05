@@ -8,35 +8,28 @@
       <el-form-item>
         <el-input
           v-model="dataForm.key"
-          placeholder="关键字"
+          placeholder="参数名"
           clearable
         ></el-input>
       </el-form-item>
       <el-form-item>
-        <el-select v-model="filterStatus" clearable placeholder="筛选审核状态">
-          <el-option
-            v-for="item in filterableStatus"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          >
-          </el-option>
-        </el-select>
         <el-button @click="getDataList()">查询</el-button>
         <el-button
-          v-if="isAuth('basic:auditdetail:pass')"
-          type="success"
-          @click="auditPass()"
-          :disabled="dataListSelections.length <= 0"
-          >批量通过</el-button
+          v-if="isAuth('basic:alumnusbasic:save')"
+          type="primary"
+          @click="addOrUpdateHandle()"
+          >新增</el-button
         >
         <el-button
-          v-if="isAuth('basic:auditdetail:notpass')"
+          v-if="isAuth('basic:alumnusbasic:delete')"
           type="danger"
-          @click="auditNotPass()"
+          @click="deleteHandle()"
           :disabled="dataListSelections.length <= 0"
-          >批量不通过</el-button
+          >批量删除</el-button
         >
+        <el-upload action="" :data="dataObj">
+          <el-button size="small" type="primary">导入excel文件</el-button>
+        </el-upload>
       </el-form-item>
     </el-form>
     <el-table
@@ -60,13 +53,6 @@
         label="id"
       >
       </el-table-column>
-      <!-- <el-table-column
-        prop="alumnusBasicId"
-        header-align="center"
-        align="center"
-        label="校友基本信息表的id"
-      >
-      </el-table-column> -->
       <el-table-column
         prop="aluName"
         header-align="center"
@@ -82,30 +68,143 @@
       >
       </el-table-column>
       <el-table-column
-        prop="status"
+        prop="gender"
         header-align="center"
         align="center"
-        label="审核状态"
+        label="性别"
       >
-        <template slot-scope="scope">
-          <div class="tag-group">
-            <el-tag size="medium" :type="showStatus[scope.row.status]">{{
-              scope.row.status == 0
-                ? "待审核"
-                : scope.row.status == 1
-                ? "通过"
-                : scope.row.status == 2
-                ? "未通过"
-                : "已撤销"
-            }}</el-tag>
-          </div>
-        </template>
+      </el-table-column>
+      <el-table-column
+        prop="idCard"
+        header-align="center"
+        align="center"
+        label="身份证号"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="nationality"
+        header-align="center"
+        align="center"
+        label="民族"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="politicalStatus"
+        header-align="center"
+        align="center"
+        label="政治面貌"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="email"
+        header-align="center"
+        align="center"
+        label="邮箱"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="nativePlace"
+        header-align="center"
+        align="center"
+        label="籍贯"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="clazz"
+        header-align="center"
+        align="center"
+        label="班级"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="admissionTime"
+        header-align="center"
+        align="center"
+        label="入学时间"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="graduationTime"
+        header-align="center"
+        align="center"
+        label="毕业时间"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="major"
+        header-align="center"
+        align="center"
+        label="专业"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="degreeStage"
+        header-align="center"
+        align="center"
+        label="阶段"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="phoneNum"
+        header-align="center"
+        align="center"
+        label="手机"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="city"
+        header-align="center"
+        align="center"
+        label="所在城市"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="workUnit"
+        header-align="center"
+        align="center"
+        label="工作单位"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="jobTitle"
+        header-align="center"
+        align="center"
+        label="担任职务"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="enterpriseProperty"
+        header-align="center"
+        align="center"
+        label="企业性质"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="workAddress"
+        header-align="center"
+        align="center"
+        label="工作地址"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="note"
+        header-align="center"
+        align="center"
+        label="备注"
+      >
+      </el-table-column>
+      <el-table-column
+        prop="aluStatus"
+        header-align="center"
+        align="center"
+        label="状态"
+      >
       </el-table-column>
       <el-table-column
         prop="createTime"
         header-align="center"
         align="center"
-        label="创建时间"
+        label="注册时间"
       >
       </el-table-column>
       <el-table-column
@@ -123,22 +222,17 @@
         label="操作"
       >
         <template slot-scope="scope">
-          <el-button type="text" size="small" @click="checkDetail(scope.row.id)"
-            >详情</el-button
+          <el-button
+            type="text"
+            size="small"
+            @click="addOrUpdateHandle(scope.row.id)"
+            >修改</el-button
           >
           <el-button
             type="text"
             size="small"
-            @click="auditPass(scope.row.id)"
-            v-if="scope.row.status == 0"
-            >通过</el-button
-          >
-          <el-button
-            type="text"
-            size="small"
-            @click="auditNotPass(scope.row.id)"
-            v-if="scope.row.status == 0"
-            >不通过</el-button
+            @click="deleteHandle(scope.row.id)"
+            >删除</el-button
           >
         </template>
       </el-table-column>
@@ -153,17 +247,17 @@
       layout="total, sizes, prev, pager, next, jumper"
     >
     </el-pagination>
-    <!-- 弹窗, 详情 -->
-    <check-detail
-      v-if="checkDetailVisible"
-      ref="checkDetail"
+    <!-- 弹窗, 新增 / 修改 -->
+    <add-or-update
+      v-if="addOrUpdateVisible"
+      ref="addOrUpdate"
       @refreshDataList="getDataList"
-    ></check-detail>
+    ></add-or-update>
   </div>
 </template>
 
 <script>
-import CheckDetail from "./auditdetail-check-detail";
+import AddOrUpdate from "./personalcenter-info-update";
 export default {
   data() {
     return {
@@ -176,31 +270,11 @@ export default {
       totalPage: 0,
       dataListLoading: false,
       dataListSelections: [],
-      checkDetailVisible: false,
-      showStatus: ["", "success", "danger", "warning"],
-      filterStatus: "",
-      filterableStatus: [
-        {
-          value: "0",
-          label: "待审核"
-        },
-        {
-          value: "1",
-          label: "通过"
-        },
-        {
-          value: "2",
-          label: "未通过"
-        },
-        {
-          value: "3",
-          label: "已撤销"
-        }
-      ]
+      addOrUpdateVisible: false
     };
   },
   components: {
-    CheckDetail
+    AddOrUpdate
   },
   activated() {
     this.getDataList();
@@ -210,22 +284,21 @@ export default {
     getDataList() {
       this.dataListLoading = true;
       this.$http({
-        url: this.$http.adornUrl("/sys/feign/audit-list"),
+        url: this.$http.adornUrl("/basic/alumnusbasic/list"),
         method: "get",
         params: this.$http.adornParams({
           page: this.pageIndex,
           limit: this.pageSize,
-          key: this.dataForm.key,
-          status: this.filterStatus
+          key: this.dataForm.key
         })
       }).then(({ data }) => {
+        console.info(data)
         if (data && data.code === 0) {
           this.dataList = data.page.list;
           this.totalPage = data.page.totalCount;
         } else {
           this.dataList = [];
           this.totalPage = 0;
-          this.$message.error(data.msg);
         }
         this.dataListLoading = false;
       });
@@ -245,58 +318,22 @@ export default {
     selectionChangeHandle(val) {
       this.dataListSelections = val;
     },
-    // 详情
-    checkDetail(id) {
-      this.checkDetailVisible = true;
+    // 新增 / 修改
+    addOrUpdateHandle(id) {
+      this.addOrUpdateVisible = true;
       this.$nextTick(() => {
-        this.$refs.checkDetail.init(id);
+        this.$refs.addOrUpdate.init(id);
       });
     },
-    // 审核通过
-    auditPass(id) {
+    // 删除
+    deleteHandle(id) {
       var ids = id
         ? [id]
         : this.dataListSelections.map(item => {
             return item.id;
           });
       this.$confirm(
-        `确定对[id=${ids.join(",")}]进行[${id ? "通过" : "批量通过"}]操作?`,
-        "提示",
-        {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "success"
-        }
-      ).then(() => {
-        this.$http({
-          url: this.$http.adornUrl("/basic/auditdetail/audit-pass"),
-          method: "post",
-          data: this.$http.adornData(ids, false)
-        }).then(({ data }) => {
-          if (data && data.code === 0) {
-            this.$message({
-              message: "操作成功",
-              type: "success",
-              duration: 1500,
-              onClose: () => {
-                this.getDataList();
-              }
-            });
-          } else {
-            this.$message.error(data.msg);
-          }
-        });
-      });
-    },
-    // 审核不通过
-    auditNotPass(id) {
-      var ids = id
-        ? [id]
-        : this.dataListSelections.map(item => {
-            return item.id;
-          });
-      this.$confirm(
-        `确定对[id=${ids.join(",")}]进行[${id ? "不通过" : "批量不通过"}]操作?`,
+        `确定对[id=${ids.join(",")}]进行[${id ? "删除" : "批量删除"}]操作?`,
         "提示",
         {
           confirmButtonText: "确定",
@@ -305,7 +342,7 @@ export default {
         }
       ).then(() => {
         this.$http({
-          url: this.$http.adornUrl("/basic/auditdetail/audit-not-pass"),
+          url: this.$http.adornUrl("/basic/alumnusbasic/delete"),
           method: "post",
           data: this.$http.adornData(ids, false)
         }).then(({ data }) => {

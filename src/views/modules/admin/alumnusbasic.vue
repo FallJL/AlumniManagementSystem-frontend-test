@@ -284,7 +284,8 @@ export default {
     getDataList() {
       this.dataListLoading = true;
       this.$http({
-        url: this.$http.adornUrl("/basic/alumnusbasic/list"),
+        // url: this.$http.adornUrl("/basic/alumnusbasic/list"),
+        url: this.$http.adornUrl("/sys/feign/alumnus-list"),
         method: "get",
         params: this.$http.adornParams({
           page: this.pageIndex,
@@ -299,6 +300,7 @@ export default {
         } else {
           this.dataList = [];
           this.totalPage = 0;
+          this.$message.error(data.msg)
         }
         this.dataListLoading = false;
       });
